@@ -5,16 +5,12 @@ local paymentDue = false
 
 -- Handlers
 
-RegisterCommand('financeTable', function()
-    print(json.encode(financetimer))
-end)
-
 -- Store game time for player when they load
 RegisterNetEvent('qb-vehicleshop:server:addPlayer', function(citizenid, gameTime)
     financetimer[citizenid] = gameTime
 end)
 
--- Deduct stored game time from player
+-- Deduct stored game time from player on logout
 RegisterNetEvent('qb-vehicleshop:server:removePlayer', function(citizenid)
     if financetimer[citizenid] then
         local playTime = financetimer[citizenid]
@@ -26,6 +22,30 @@ RegisterNetEvent('qb-vehicleshop:server:removePlayer', function(citizenid)
         end
     end
     financetimer[citizenid] = {}
+end)
+
+-- Deduct stored game time from player on quit because we can't get citizenid
+AddEventHandler('playerDropped', function()
+    local src = source
+    for k,v in pairs(GetPlayerIdentifiers(src)) do
+        if string.sub(v, 1, string.len("license:")) == "license:" then
+            license = v
+        end
+    end
+    if license then
+        local vehicles = exports.oxmysql:executeSync('SELECT * FROM player_vehicles WHERE license = ?', {license})
+        if vehicles then
+            for k,v in pairs(vehicles) do
+                if financetimer[v.citizenid] then
+                    local playTime = financetimer[v.citizenid]
+                    if v.balance >= 1 then
+                        exports.oxmysql:update('UPDATE player_vehicles SET financetime = ? WHERE plate = ?', {math.floor(v.financetime - (((GetGameTimer() - playTime) / 1000) / 60)), v.plate})
+                        financetimer[v.citizenid] = {}
+                    end
+                end
+            end
+        end
+    end
 end)
 
 -- Functions
