@@ -5,6 +5,7 @@ local inPDM, pdmVehiclesSpawned = false, false
 local inLuxury, luxVehiclesSpawned = false, false
 local testDriveVeh, inTestDrive = 0, false
 local ClosestVehicle, ClosestShop = 1, nil
+local zones = {}
 
 -- Handlers
 
@@ -148,24 +149,28 @@ end
 local function createVehZones(veh) -- This will create an entity zone if config is true that you can use to target and open the vehicle menu
     if not Config.UsingTarget then
         for i = 1, #Config.Shops[ClosestShop]['ShowroomVehicles'] do
-            local boxZone = BoxZone:Create(vector3(Config.Shops[ClosestShop]['ShowroomVehicles'][i]['coords'].x, Config.Shops[ClosestShop]['ShowroomVehicles'][i]['coords'].y, Config.Shops[ClosestShop]['ShowroomVehicles'][i]['coords'].z), 2.75, 2.75, {
+            zones[#zones+1] = BoxZone:Create(
+                vector3(Config.Shops[ClosestShop]['ShowroomVehicles'][i]['coords'].x,
+                Config.Shops[ClosestShop]['ShowroomVehicles'][i]['coords'].y,
+                Config.Shops[ClosestShop]['ShowroomVehicles'][i]['coords'].z),
+                2.75,
+                2.75, {
                 name="box_zone",
                 debugPoly=false,
             })
-
-            local combo = ComboZone:Create({boxZone}, {name="combo", debugPoly=false})
-                combo:onPlayerInOut(function(isPointInside)
-                if isPointInside then
-                    if inLuxury and PlayerData.job.name == 'cardealer' then
-                        exports['qb-menu']:showHeader(vehHeaderMenu)
-                    elseif inPDM then
-                        exports['qb-menu']:showHeader(vehHeaderMenu)
-                    end
-                else
-                    exports['qb-menu']:closeMenu()
-                end
-            end)
         end
+        local combo = ComboZone:Create(zones, {name = "vehCombo", debugPoly = false})
+        combo:onPlayerInOut(function(isPointInside)
+            if isPointInside then
+                if inLuxury and PlayerData.job.name == 'cardealer' then
+                    exports['qb-menu']:showHeader(vehHeaderMenu)
+                elseif inPDM then
+                    exports['qb-menu']:showHeader(vehHeaderMenu)
+                end
+            else
+                exports['qb-menu']:closeMenu()
+            end
+        end)
     else
         exports['qb-target']:AddTargetEntity(veh, {
             options = {
