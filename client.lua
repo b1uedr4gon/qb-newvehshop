@@ -526,6 +526,7 @@ RegisterNetEvent('qb-vehicleshop:client:openFinance', function(data)
 end)
 
 RegisterNetEvent('qb-vehicleshop:client:openCustomFinance', function(data)
+    TriggerEvent('animations:client:EmoteCommandStart', {"tablet2"})
     local dialog = exports['qb-input']:ShowInput({
         header = getVehBrand():upper().. ' ' ..data.buyVehicle:upper().. ' - $' ..data.price,
         submitText = "Submit",
@@ -546,6 +547,7 @@ RegisterNetEvent('qb-vehicleshop:client:openCustomFinance', function(data)
     })
     if dialog then
         if not dialog.downPayment or not dialog.paymentAmount then return end
+        TriggerEvent('animations:client:EmoteCommandStart', {"c"})
         TriggerServerEvent('qb-vehicleshop:server:sellfinanceVehicle', dialog.downPayment, dialog.paymentAmount, data.buyVehicle)
     end
 end)
