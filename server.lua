@@ -1,40 +1,31 @@
 -- Variables
 local QBCore = exports['qb-core']:GetCoreObject()
-local NumberCharset = {}
-local Charset = {}
 local financetimer = {}
-local playTime = 0
 local paymentDue = false
 
 -- Handlers
 
+RegisterCommand('financeTable', function()
+    print(json.encode(financetimer))
+end)
+
 -- Store game time for player when they load
-AddEventHandler('QBCore:Client:OnPlayerLoaded', function()
-    local src = source
-    local player = QBCore.Functions.GetPlayer(src)
-    local citizenid = player.PlayerData.citizenid
-    local gameTime = GetGameTimer()
-    financetimer[#financetimer+1] = {citizenid = citizenid, gameTime = gameTime}
+RegisterNetEvent('qb-vehicleshop:server:addPlayer', function(citizenid, gameTime)
+    financetimer[citizenid] = gameTime
 end)
 
 -- Deduct stored game time from player
-AddEventHandler('playerDropped', function()
-    local src = source
-    local player = QBCore.Functions.GetPlayer(src)
-    local citizenid = player.PlayerData.citizenid
-    for k,v in pairs(financetimer) do
-        if v.citizenid == citizenid then
-            playTime = v.gameTime
-            sourcePlayer = k
+RegisterNetEvent('qb-vehicleshop:server:removePlayer', function(citizenid)
+    if financetimer[citizenid] then
+        local playTime = financetimer[citizenid]
+        local financetime = exports.oxmysql:executeSync('SELECT * FROM player_vehicles WHERE citizenid = ?', {citizenid})
+        for k,v in pairs(financetime) do
+            if v.balance >= 1 then
+                exports.oxmysql:update('UPDATE player_vehicles SET financetime = ? WHERE plate = ?', {math.floor(v.financetime - (((GetGameTimer() - playTime) / 1000) / 60)), v.plate})
+            end
         end
     end
-    local financetime = exports.oxmysql:executeSync('SELECT * FROM player_vehicles WHERE citizenid = ?', {citizenid})
-    for k,v in pairs(financetime) do
-        if v.balance >= 1 then
-            exports.oxmysql:update('UPDATE player_vehicles SET financetime = ? WHERE plate = ?', {math.floor(v.financetime - (((GetGameTimer() - playTime) / 1000) / 60)), v.plate})
-        end
-    end
-    table.remove(financetimer, sourcePlayer)
+    financetimer[citizenid] = {}
 end)
 
 -- Functions
@@ -101,11 +92,14 @@ end)
 -- Send customer for test drive
 RegisterNetEvent('qb-vehicleshop:server:customTestDrive', function(data)
     local src = source
-    if QBCore.Functions.GetPlayer(src).PlayerData.job.name == 'cardealer' then
+    local PlayerPed = GetPlayerPed(src)
+    local pCoords = GetEntityCoords(PlayerPed)
+    local player = QBCore.Functions.GetPlayer(src)
+    if player.PlayerData.job.name == 'cardealer' then
         for k, v in pairs(QBCore.Functions.GetPlayers()) do
-            local PlayerPed = GetPlayerPed(source)
             local TargetPed = GetPlayerPed(v)
-            local dist = #(GetEntityCoords(PlayerPed) - GetEntityCoords(TargetPed))
+            local tCoords = GetEntityCoords(TargetPed)
+            local dist = #(pCoords - tCoords)
             if PlayerPed ~= TargetPed and dist < 3.0 then
                 testDrivePlayer = QBCore.Functions.GetPlayer(v)
             end
@@ -272,12 +266,14 @@ end)
 -- Sell vehicle to customer
 RegisterNetEvent('qb-vehicleshop:server:sellShowroomVehicle', function(data)
     local src = source
+    local PlayerPed = GetPlayerPed(src)
+    local pCoords = GetEntityCoords(PlayerPed)
     local player = QBCore.Functions.GetPlayer(src)
-    if QBCore.Functions.GetPlayer(src).PlayerData.job.name == 'cardealer' then
+    if player.PlayerData.job.name == 'cardealer' then
         for k, v in pairs(QBCore.Functions.GetPlayers()) do
-            local PlayerPed = GetPlayerPed(source)
             local TargetPed = GetPlayerPed(v)
-            local dist = #(GetEntityCoords(PlayerPed) - GetEntityCoords(TargetPed))
+            local tCoords = GetEntityCoords(TargetPed)
+            local dist = #(pCoords - tCoords)
             if PlayerPed ~= TargetPed and dist < 3.0 then
                 targetPlayer = QBCore.Functions.GetPlayer(v)
             end
@@ -334,14 +330,16 @@ end)
 -- Finance vehicle to customer
 RegisterNetEvent('qb-vehicleshop:server:sellfinanceVehicle', function(downPayment, paymentAmount, vehicle)
     local src = source
+    local PlayerPed = GetPlayerPed(src)
+    local pCoords = GetEntityCoords(PlayerPed)
     local player = QBCore.Functions.GetPlayer(src)
-    if QBCore.Functions.GetPlayer(src).PlayerData.job.name == 'cardealer' then
+    if player.PlayerData.job.name == 'cardealer' then
         for k, v in pairs(QBCore.Functions.GetPlayers()) do
-            local PlayerPed = GetPlayerPed(source)
             local TargetPed = GetPlayerPed(v)
-            local dist = #(GetEntityCoords(PlayerPed) - GetEntityCoords(TargetPed))
+            local tCoords = GetEntityCoords(TargetPed)
+            local dist = #(pCoords - tCoords)
             if PlayerPed ~= TargetPed and dist < 3.0 then
-                targetplayer = QBCore.Functions.GetPlayer(v)
+                targetPlayer = QBCore.Functions.GetPlayer(v)
             end
         end
         if targetplayer then

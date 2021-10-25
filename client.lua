@@ -10,6 +10,9 @@ local ClosestVehicle, ClosestShop = 1, nil
 
 AddEventHandler('QBCore:Client:OnPlayerLoaded', function()
     PlayerData = QBCore.Functions.GetPlayerData()
+    local citizenid = PlayerData.citizenid
+    local gameTime = GetGameTimer()
+    TriggerServerEvent('qb-vehicleshop:server:addPlayer', citizenid, gameTime)
     TriggerServerEvent('qb-vehicleshop:server:checkFinance')
 end)
 
@@ -18,6 +21,8 @@ RegisterNetEvent('QBCore:Client:OnJobUpdate', function(JobInfo)
 end)
 
 RegisterNetEvent('QBCore:Client:OnPlayerUnload', function()
+    local citizenid = PlayerData.citizenid
+    TriggerServerEvent('qb-vehicleshop:server:removePlayer', citizenid)
     PlayerData = {}
 end)
 
