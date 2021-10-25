@@ -1,7 +1,7 @@
 Config = {}
 Config.UsingTarget = false -- If you are using qb-target (uses entity zones to target vehicles)
-Config.Commission = 10 -- Percent that goes to sales person from a full car sale 10%
-Config.FinanceCommission = 5 -- Percent that goes to sales person from a finance sale 5%
+Config.Commission = 0.10 -- Percent that goes to sales person from a full car sale 10%
+Config.FinanceCommission = 0.05 -- Percent that goes to sales person from a finance sale 5%
 Config.FinanceZone = vector3(-29.53, -1103.67, 26.42) -- Where the finance menu is located
 Config.PaymentWarning = 10 -- time in minutes that player has to make payment before repo
 Config.PaymentInterval = 24 -- time in hours between payment being due
@@ -21,7 +21,7 @@ Config.Shops = {
             ['motorcycles'] = 'Motorcycles',
             ['vans'] = 'Vans'
         },
-        ['TestDriveTimeLimit'] = 3, -- Time in minutes until the vehicle gets deleted
+        ['TestDriveTimeLimit'] = 0.5, -- Time in minutes until the vehicle gets deleted
         ['Location'] = vector3(-45.67, -1098.34, 26.42), -- Blip Location
         ['ReturnLocation'] = vector3(-44.74, -1082.58, 26.68), -- Location to return vehicle, only enables if the vehicleshop has a job owned
         ['VehicleSpawn'] = vector4(-56.79, -1109.85, 26.43, 71.5), -- Spawn location when vehicle is bought
@@ -74,7 +74,7 @@ Config.Shops = {
             ['super'] = 'Super',
             ['sports'] = 'Sports'
         },
-        ['TestDriveTimeLimit'] = 3,
+        ['TestDriveTimeLimit'] = 0.5,
         ['Location'] = vector3(-63.59, 68.25, 73.06),
         ['ReturnLocation'] = vector3(-65.05, 81.23, 71.16),
         ['VehicleSpawn'] = vector4(-71.13, 84.04, 71.09, 65.23),

@@ -3,7 +3,7 @@ local QBCore = exports['qb-core']:GetCoreObject()
 local PlayerData = QBCore.Functions.GetPlayerData() -- Just for resource restart (same as event handler)
 local inPDM, pdmVehiclesSpawned = false, false
 local inLuxury, luxVehiclesSpawned = false, false
-local testDriveVeh = 0
+local testDriveVeh, inTestDrive = 0, false
 local ClosestVehicle, ClosestShop = 1, nil
 
 -- Handlers
@@ -59,9 +59,20 @@ local returnTestDrive = {
 
 -- Functions
 
+local function drawTxt(text,font,x,y,scale,r,g,b,a)
+	SetTextFont(font)
+	SetTextScale(scale,scale)
+	SetTextColour(r,g,b,a)
+	SetTextOutline()
+	SetTextCentre(1)
+	SetTextEntry("STRING")
+	AddTextComponentString(text)
+	DrawText(x,y)
+end
+
 local function comma_value(amount)
     local formatted = amount
-    while true do  
+    while true do
       formatted, k = string.gsub(formatted, "^(-?%d+)(%d%d%d)", '%1,%2')
       if (k==0) then
         break
@@ -113,10 +124,23 @@ local function createTestDriveReturn()
     })
 
     testDriveZone:onPlayerInOut(function(isPointInside)
-        if isPointInside then
+        if isPointInside and IsPedInAnyVehicle(PlayerPedId()) then
             exports['qb-menu']:openMenu(returnTestDrive)
         else
             exports['qb-menu']:closeMenu()
+        end
+    end)
+end
+
+local function startTestDriveTimer(testDriveTime)
+    local gameTimer = GetGameTimer()
+    CreateThread(function()
+        while inTestDrive do
+            Wait(1)
+            if GetGameTimer() < gameTimer+tonumber(1000*testDriveTime) then
+                local secondsLeft = GetGameTimer() - gameTimer
+                drawTxt('Test Drive Time Remaining: '..math.ceil(testDriveTime - secondsLeft/1000),4,0.5,0.93,0.50,255,255,255,180)
+            end
         end
     end)
 end
@@ -350,7 +374,9 @@ RegisterNetEvent('qb-vehicleshop:client:showVehOptions', function()
 end)
 
 RegisterNetEvent('qb-vehicleshop:client:TestDrive', function()
-    if ClosestVehicle ~= 0 then
+    if not inTestDrive and ClosestVehicle ~= 0 then
+        inTestDrive = true
+        local prevCoords = GetEntityCoords(PlayerPedId())
         QBCore.Functions.SpawnVehicle(Config.Shops[ClosestShop]["ShowroomVehicles"][ClosestVehicle].chosenVehicle, function(veh)
             TaskWarpPedIntoVehicle(PlayerPedId(), veh, -1)
             exports['LegacyFuel']:SetFuel(veh, 100)
@@ -364,34 +390,49 @@ RegisterNetEvent('qb-vehicleshop:client:TestDrive', function()
             SetTimeout(Config.Shops[ClosestShop]["TestDriveTimeLimit"] * 60000, function()
                 if testDriveVeh ~= 0 then
                     testDriveVeh = 0
+                    inTestDrive = false
                     QBCore.Functions.DeleteVehicle(veh)
-                    QBCore.Functions.Notify("The time limit has been reached, the vehicle has been deleted")
+                    SetEntityCoords(PlayerPedId(), prevCoords)
+                    QBCore.Functions.Notify('Vehicle test drive complete')
                 end
             end)
         end, Config.Shops[ClosestShop]["VehicleSpawn"], false)
         createTestDriveReturn()
+        startTestDriveTimer(Config.Shops[ClosestShop]["TestDriveTimeLimit"] * 60)
+    else
+        QBCore.Functions.Notify('Already in test drive', 'error')
     end
 end)
 
-RegisterNetEvent('qb-vehicleshop:client:customTestDrive', function()
-    QBCore.Functions.SpawnVehicle(Config.Shops[ClosestShop]["ShowroomVehicles"][ClosestVehicle].chosenVehicle, function(veh)
-        exports['LegacyFuel']:SetFuel(veh, 100)
-        SetVehicleNumberPlateText(veh, 'TESTDRIVE')
-        SetEntityAsMissionEntity(veh, true, true)
-        SetEntityHeading(veh, Config.Shops[ClosestShop]["VehicleSpawn"].w)
-        TriggerEvent('vehiclekeys:client:SetOwner', GetVehicleNumberPlateText(veh))
-        TriggerServerEvent('qb-vehicletuning:server:SaveVehicleProps', QBCore.Functions.GetVehicleProperties(veh))
-        testDriveVeh = veh
-        QBCore.Functions.Notify('You have '..Config.Shops[ClosestShop]["TestDriveTimeLimit"]..' minutes remaining')
-        SetTimeout(Config.Shops[ClosestShop]["TestDriveTimeLimit"] * 60000, function()
-            if testDriveVeh ~= 0 then
-                testDriveVeh = 0
-                QBCore.Functions.DeleteVehicle(veh)
-                QBCore.Functions.Notify("The time limit has been reached, the vehicle has been deleted")
-            end
-        end)
-    end, Config.Shops[ClosestShop]["VehicleSpawn"], false)
-    createTestDriveReturn()
+RegisterNetEvent('qb-vehicleshop:client:customTestDrive', function(data)
+    if not inTestDrive then
+        inTestDrive = true
+        local vehicle = data.testVehicle
+        local prevCoords = GetEntityCoords(PlayerPedId())
+        QBCore.Functions.SpawnVehicle(vehicle, function(veh)
+            exports['LegacyFuel']:SetFuel(veh, 100)
+            SetVehicleNumberPlateText(veh, 'TESTDRIVE')
+            SetEntityAsMissionEntity(veh, true, true)
+            SetEntityHeading(veh, Config.Shops[ClosestShop]["VehicleSpawn"].w)
+            TriggerEvent('vehiclekeys:client:SetOwner', GetVehicleNumberPlateText(veh))
+            TriggerServerEvent('qb-vehicletuning:server:SaveVehicleProps', QBCore.Functions.GetVehicleProperties(veh))
+            testDriveVeh = veh
+            QBCore.Functions.Notify('You have '..Config.Shops[ClosestShop]["TestDriveTimeLimit"]..' minutes remaining')
+            SetTimeout(Config.Shops[ClosestShop]["TestDriveTimeLimit"] * 60000, function()
+                if testDriveVeh ~= 0 then
+                    testDriveVeh = 0
+                    inTestDrive = false
+                    QBCore.Functions.DeleteVehicle(veh)
+                    SetEntityCoords(PlayerPedId(), prevCoords)
+                    QBCore.Functions.Notify('Vehicle test drive complete')
+                end
+            end)
+        end, Config.Shops[ClosestShop]["VehicleSpawn"], false)
+        createTestDriveReturn()
+        startTestDriveTimer(Config.Shops[ClosestShop]["TestDriveTimeLimit"] * 60)
+    else
+        QBCore.Functions.Notify('Already in test drive', 'error')
+    end
 end)
 
 RegisterNetEvent('qb-vehicleshop:client:TestDriveReturn', function()
@@ -399,6 +440,7 @@ RegisterNetEvent('qb-vehicleshop:client:TestDriveReturn', function()
     local veh = GetVehiclePedIsIn(ped)
     if veh == testDriveVeh then
         testDriveVeh = 0
+        inTestDrive = false
         QBCore.Functions.DeleteVehicle(veh)
         exports['qb-menu']:closeMenu()
         testDriveZone:destroy()
