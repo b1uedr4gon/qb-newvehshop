@@ -73,8 +73,9 @@ local function GeneratePlate()
     local result = exports.oxmysql:scalarSync('SELECT plate FROM player_vehicles WHERE plate = ?', {plate})
     if result then
         return GeneratePlate()
+    else
+        return plate:upper()
     end
-    return plate:upper()
 end
 
 local function comma_value(amount)
