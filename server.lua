@@ -6,10 +6,6 @@ local financetimer = {}
 local playTime = 0
 local paymentDue = false
 
-for i = 48,  57 do NumberCharset[#NumberCharset+1] = string.char(i) end
-for i = 65,  90 do Charset[#Charset+1] = string.char(i) end
-for i = 97, 122 do Charset[#Charset+1] = string.char(i) end
-
 -- Handlers
 
 -- Store game time for player when they load
@@ -61,31 +57,11 @@ local function calculateNewFinance(paymentAmount, vehData)
     return round(newBalance), round(newPayment), newPaymentsLeft
 end
 
-local function GetRandomNumber(length)
-	Wait(1)
-	math.randomseed(GetGameTimer())
-	if length > 0 then
-		return GetRandomNumber(length - 1) .. NumberCharset[math.random(1, #NumberCharset)]
-	else
-		return ''
-	end
-end
-
-local function GetRandomLetter(length)
-	Wait(1)
-	math.randomseed(GetGameTimer())
-	if length > 0 then
-		return GetRandomLetter(length - 1) .. Charset[math.random(1, #Charset)]
-	else
-		return ''
-	end
-end
-
 local function GeneratePlate()
-    local plate = tostring(GetRandomNumber(1)) .. GetRandomLetter(2) .. tostring(GetRandomNumber(3)) .. GetRandomLetter(2)
+    local plate = QBCore.Shared.RandomInt(1) .. QBCore.Shared.RandomStr(2) .. QBCore.Shared.RandomInt(3) .. QBCore.Shared.RandomStr(2)
     local result = exports.oxmysql:scalarSync('SELECT plate FROM player_vehicles WHERE plate = ?', {plate})
-    while result do
-        plate = tostring(GetRandomNumber(1)) .. GetRandomLetter(2) .. tostring(GetRandomNumber(3)) .. GetRandomLetter(2)
+    if result then
+        return GeneratePlate()
     end
     return plate:upper()
 end
@@ -272,7 +248,7 @@ RegisterNetEvent('qb-vehicleshop:server:financeVehicle', function(downPayment, p
         TriggerClientEvent('qb-vehicleshop:client:buyShowroomVehicle', src, vehicle, plate)
         pData.Functions.RemoveMoney('cash', downPayment, 'vehicle-bought-in-showroom')
     elseif bank > downPayment then
-        exports.oxmysql:insert('INSERT INTO player_vehicles (license, citizenid, vehicle, hash, mods, plate, state, balance, paymentamount, paymentsleft, financetime) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', {
+        exports.oxmysql:insert('INSERT INTO player_vehicles (license, citizenid, vehicle, hash, mods, plate, state, balance, paymentamount, paymentsleft, financetime) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', {
             pData.PlayerData.license,
             cid,
             vehicle,
