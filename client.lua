@@ -487,7 +487,7 @@ RegisterNetEvent('qb-vehicleshop:client:openVehCats', function(data)
         }
     }
     for k,v in pairs(QBCore.Shared.Vehicles) do
-        if QBCore.Shared.Vehicles[k]["category"] == data.catName then
+        if QBCore.Shared.Vehicles[k]["category"] == data.catName and QBCore.Shared.Vehicles[k]["shop"] == ClosestShop then
             vehicleMenu[#vehicleMenu + 1] = {
                 header = v.name,
                 params = {
