@@ -451,3 +451,54 @@ RegisterNetEvent('qb-vehicleshop:server:checkFinance', function()
         end)
     end
 end)
+
+-- Transfer vehicle to player in passenger seat
+QBCore.Commands.Add('transferVehicle', 'Gift or sell your vehicle', {{ name = 'amount', help = 'Sell amount' }}, false, function(source, args)
+    local src = source
+    local ped = GetPlayerPed(src)
+    local player = QBCore.Functions.GetPlayer(src)
+    local citizenid = player.PlayerData.citizenid
+    local sellAmount = tonumber(args[1])
+    local vehicle = GetVehiclePedIsIn(ped, false)
+    local driver = GetPedInVehicleSeat(vehicle, -1)
+    local passenger = GetPedInVehicleSeat(vehicle, 0)
+    local plate = GetVehicleNumberPlateText(vehicle)
+    local isOwned = exports.oxmysql:scalarSync('SELECT citizenid FROM player_vehicles WHERE plate = ?', {plate})
+    if isOwned == citizenid then
+        if ped == driver then
+            if passenger ~= 0 then
+                local targetid = NetworkGetEntityOwner(passenger)
+                local target = QBCore.Functions.GetPlayer(targetid)
+                if target then
+                    if sellAmount then
+                        if target.Functions.GetMoney('cash') > sellAmount then
+                            local targetcid = target.PlayerData.citizenid
+                            exports.oxmysql:update('UPDATE player_vehicles SET citizenid = ? WHERE plate = ?', {targetcid, plate})
+                            player.Functions.AddMoney('cash', sellAmount)
+                            TriggerClientEvent('QBCore:Notify', src, 'You sold your vehicle for $'..comma_value(sellAmount), 'success')
+                            target.Functions.RemoveMoney('cash', sellAmount)
+                            TriggerClientEvent('vehiclekeys:client:SetOwner', target.PlayerData.source, plate)
+                            TriggerClientEvent('QBCore:Notify', target.PlayerData.source, 'You bought a vehicle for $'..comma_value(sellAmount), 'success')
+                        else
+                            TriggerClientEvent('QBCore:Notify', src, 'Not enough money', 'error')
+                        end
+                    else
+                        local targetcid = target.PlayerData.citizenid
+                        exports.oxmysql:update('UPDATE player_vehicles SET citizenid = ? WHERE plate = ?', {targetcid, plate})
+                        TriggerClientEvent('QBCore:Notify', src, 'You gifted your vehicle', 'success')
+                        TriggerClientEvent('vehiclekeys:client:SetOwner', target.PlayerData.source, plate)
+                        TriggerClientEvent('QBCore:Notify', target.PlayerData.source, 'You were gifted a vehicle', 'success')
+                    end
+                else
+                    TriggerClientEvent('QBCore:Notify', src, 'Couldnt get passenger info', 'error')
+                end
+            else
+                TriggerClientEvent('QBCore:Notify', src, 'No passenger', 'error')
+            end
+        else
+            TriggerClientEvent('QBCore:Notify', src, 'Must be driver', 'error')
+        end
+    else
+        TriggerClientEvent('QBCore:Notify', src, 'You dont own this vehicle', 'error')
+    end
+end, 'user')
