@@ -115,22 +115,16 @@ RegisterNetEvent('qb-vehicleshop:server:customTestDrive', function(data)
     local src = source
     local PlayerPed = GetPlayerPed(src)
     local pCoords = GetEntityCoords(PlayerPed)
-    local player = QBCore.Functions.GetPlayer(src)
-    if player.PlayerData.job.name == 'cardealer' then
-        for k, v in pairs(QBCore.Functions.GetPlayers()) do
-            local TargetPed = GetPlayerPed(v)
-            local tCoords = GetEntityCoords(TargetPed)
-            local dist = #(pCoords - tCoords)
-            if PlayerPed ~= TargetPed and dist < 3.0 then
-                testDrivePlayer = QBCore.Functions.GetPlayer(v)
-            end
+    for k, v in pairs(QBCore.Functions.GetPlayers()) do
+        local TargetPed = GetPlayerPed(v)
+        local tCoords = GetEntityCoords(TargetPed)
+        local dist = #(pCoords - tCoords)
+        if PlayerPed ~= TargetPed and dist < 3.0 then
+            testDrivePlayer = QBCore.Functions.GetPlayer(v)
         end
     end
-    if testDrivePlayer then
-        TriggerClientEvent('qb-vehicleshop:client:customTestDrive', testDrivePlayer.PlayerData.source, data)
-    else
-        TriggerClientEvent('QBCore:Notify', src, 'No one nearby', 'error')
-    end
+    if not testDrivePlayer then return TriggerClientEvent('QBCore:Notify', src, 'No one nearby', 'error') end
+    TriggerClientEvent('qb-vehicleshop:client:customTestDrive', testDrivePlayer.PlayerData.source, data)
 end)
 
 -- Make a finance payment
@@ -290,61 +284,56 @@ RegisterNetEvent('qb-vehicleshop:server:sellShowroomVehicle', function(data)
     local PlayerPed = GetPlayerPed(src)
     local pCoords = GetEntityCoords(PlayerPed)
     local player = QBCore.Functions.GetPlayer(src)
-    if player.PlayerData.job.name == 'cardealer' then
-        for k, v in pairs(QBCore.Functions.GetPlayers()) do
-            local TargetPed = GetPlayerPed(v)
-            local tCoords = GetEntityCoords(TargetPed)
-            local dist = #(pCoords - tCoords)
-            if PlayerPed ~= TargetPed and dist < 1.0 then
-                targetPlayer = QBCore.Functions.GetPlayer(v)
-            end
+    for k, v in pairs(QBCore.Functions.GetPlayers()) do
+        local TargetPed = GetPlayerPed(v)
+        local tCoords = GetEntityCoords(TargetPed)
+        local dist = #(pCoords - tCoords)
+        if PlayerPed ~= TargetPed and dist < 1.0 then
+            targetPlayer = QBCore.Functions.GetPlayer(v)
         end
-        if targetPlayer then
-            local cid = targetPlayer.PlayerData.citizenid
-            local cash = targetPlayer.PlayerData.money['cash']
-            local bank = targetPlayer.PlayerData.money['bank']
-            local vehicle = data.buyVehicle
-            local vehiclePrice = QBCore.Shared.Vehicles[vehicle]['price']
-            local plate = GeneratePlate()
-            local commission = round(vehiclePrice * Config.Commission)
-            if cash > vehiclePrice then
-                exports.oxmysql:insert('INSERT INTO player_vehicles (license, citizenid, vehicle, hash, mods, plate, state) VALUES (?, ?, ?, ?, ?, ?, ?)', {
-                    targetPlayer.PlayerData.license,
-                    cid,
-                    vehicle,
-                    GetHashKey(vehicle),
-                    '{}',
-                    plate,
-                    0
-                })
-                TriggerClientEvent('qb-vehicleshop:client:buyShowroomVehicle', targetPlayer.PlayerData.source, vehicle, plate)
-                targetPlayer.Functions.RemoveMoney('cash', vehiclePrice, 'vehicle-bought-in-showroom')
-                player.Functions.AddMoney('bank', commission)
-                TriggerEvent('qb-bossmenu:server:addAccountMoney', 'cardealer', vehiclePrice)
-                TriggerClientEvent('QBCore:Notify', targetPlayer.PlayerData.source, 'Congratulations on your purchase!', 'success')
-                TriggerClientEvent('QBCore:Notify', src, 'You earned $'..comma_value(commission)..' in commission', 'success')
-            elseif bank > vehiclePrice then
-                exports.oxmysql:insert('INSERT INTO player_vehicles (license, citizenid, vehicle, hash, mods, plate, state) VALUES (?, ?, ?, ?, ?, ?, ?)', {
-                    targetPlayer.PlayerData.license,
-                    cid,
-                    vehicle,
-                    GetHashKey(vehicle),
-                    '{}',
-                    plate,
-                    0
-                })
-                TriggerClientEvent('qb-vehicleshop:client:buyShowroomVehicle', targetPlayer.PlayerData.source, vehicle, plate)
-                targetPlayer.Functions.RemoveMoney('bank', vehiclePrice, 'vehicle-bought-in-showroom')
-                player.Functions.AddMoney('bank', commission)
-                TriggerEvent('qb-bossmenu:server:addAccountMoney', 'cardealer', vehiclePrice)
-                TriggerClientEvent('QBCore:Notify', targetPlayer.PlayerData.source, 'Congratulations on your purchase!', 'success')
-                TriggerClientEvent('QBCore:Notify', src, 'You earned $'..comma_value(commission)..' in commission', 'success')
-            else
-                TriggerClientEvent('QBCore:Notify', src, 'Not enough money', 'error')
-            end
-        else
-            TriggerClientEvent('QBCore:Notify', src, 'No one nearby', 'error')
-        end
+    end
+    if not targetPlayer then return TriggerClientEvent('QBCore:Notify', src, 'No one nearby', 'error') end
+    local cid = targetPlayer.PlayerData.citizenid
+    local cash = targetPlayer.PlayerData.money['cash']
+    local bank = targetPlayer.PlayerData.money['bank']
+    local vehicle = data.buyVehicle
+    local vehiclePrice = QBCore.Shared.Vehicles[vehicle]['price']
+    local plate = GeneratePlate()
+    local commission = round(vehiclePrice * Config.Commission)
+    if cash > vehiclePrice then
+        exports.oxmysql:insert('INSERT INTO player_vehicles (license, citizenid, vehicle, hash, mods, plate, state) VALUES (?, ?, ?, ?, ?, ?, ?)', {
+            targetPlayer.PlayerData.license,
+            cid,
+            vehicle,
+            GetHashKey(vehicle),
+            '{}',
+            plate,
+            0
+        })
+        TriggerClientEvent('qb-vehicleshop:client:buyShowroomVehicle', targetPlayer.PlayerData.source, vehicle, plate)
+        targetPlayer.Functions.RemoveMoney('cash', vehiclePrice, 'vehicle-bought-in-showroom')
+        player.Functions.AddMoney('bank', commission)
+        TriggerEvent('qb-bossmenu:server:addAccountMoney', player.PlayerData.job.name, vehiclePrice)
+        TriggerClientEvent('QBCore:Notify', targetPlayer.PlayerData.source, 'Congratulations on your purchase!', 'success')
+        TriggerClientEvent('QBCore:Notify', src, 'You earned $'..comma_value(commission)..' in commission', 'success')
+    elseif bank > vehiclePrice then
+        exports.oxmysql:insert('INSERT INTO player_vehicles (license, citizenid, vehicle, hash, mods, plate, state) VALUES (?, ?, ?, ?, ?, ?, ?)', {
+            targetPlayer.PlayerData.license,
+            cid,
+            vehicle,
+            GetHashKey(vehicle),
+            '{}',
+            plate,
+            0
+        })
+        TriggerClientEvent('qb-vehicleshop:client:buyShowroomVehicle', targetPlayer.PlayerData.source, vehicle, plate)
+        targetPlayer.Functions.RemoveMoney('bank', vehiclePrice, 'vehicle-bought-in-showroom')
+        player.Functions.AddMoney('bank', commission)
+        TriggerEvent('qb-bossmenu:server:addAccountMoney', player.PlayerData.job.name, vehiclePrice)
+        TriggerClientEvent('QBCore:Notify', targetPlayer.PlayerData.source, 'Congratulations on your purchase!', 'success')
+        TriggerClientEvent('QBCore:Notify', src, 'You earned $'..comma_value(commission)..' in commission', 'success')
+    else
+        TriggerClientEvent('QBCore:Notify', src, 'Not enough money', 'error')
     end
 end)
 
@@ -354,76 +343,71 @@ RegisterNetEvent('qb-vehicleshop:server:sellfinanceVehicle', function(downPaymen
     local PlayerPed = GetPlayerPed(src)
     local pCoords = GetEntityCoords(PlayerPed)
     local player = QBCore.Functions.GetPlayer(src)
-    if player.PlayerData.job.name == 'cardealer' then
-        for k, v in pairs(QBCore.Functions.GetPlayers()) do
-            local TargetPed = GetPlayerPed(v)
-            local tCoords = GetEntityCoords(TargetPed)
-            local dist = #(pCoords - tCoords)
-            if PlayerPed ~= TargetPed and dist < 1.0 then
-                targetplayer = QBCore.Functions.GetPlayer(v)
-            end
+    for k, v in pairs(QBCore.Functions.GetPlayers()) do
+        local TargetPed = GetPlayerPed(v)
+        local tCoords = GetEntityCoords(TargetPed)
+        local dist = #(pCoords - tCoords)
+        if PlayerPed ~= TargetPed and dist < 1.0 then
+            targetplayer = QBCore.Functions.GetPlayer(v)
         end
-        if targetplayer then
-            local downPayment = tonumber(downPayment)
-            local paymentAmount = tonumber(paymentAmount)
-            local cid = targetplayer.PlayerData.citizenid
-            local cash = targetplayer.PlayerData.money['cash']
-            local bank = targetplayer.PlayerData.money['bank']
-            local vehiclePrice = QBCore.Shared.Vehicles[vehicle]['price']
-            local commission = round(vehiclePrice * Config.FinanceCommission)
-            local timer = (Config.PaymentInterval * 60)
-            local minDown = tonumber(round(vehiclePrice / Config.MinimumDown))
-            if downPayment > vehiclePrice then return TriggerClientEvent('QBCore:Notify', src, 'Vehicle is not worth that much', 'error') end
-            if downPayment < minDown then return TriggerClientEvent('QBCore:Notify', src, 'Down payment too small', 'error') end
-            if paymentAmount > Config.MaximumPayments then return TriggerClientEvent('QBCore:Notify', src, 'Exceeded maximum payment amount', 'error') end
-            local plate = GeneratePlate()
-            local balance, vehPaymentAmount = calculateFinance(vehiclePrice, downPayment, paymentAmount)
-            if cash > downPayment then
-                exports.oxmysql:insert('INSERT INTO player_vehicles (license, citizenid, vehicle, hash, mods, plate, state, balance, paymentamount, paymentsleft, financetime) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', {
-                    targetplayer.PlayerData.license,
-                    cid,
-                    vehicle,
-                    GetHashKey(vehicle),
-                    '{}',
-                    plate,
-                    0,
-                    balance,
-                    vehPaymentAmount,
-                    paymentAmount,
-                    timer
-                })
-                TriggerClientEvent('qb-vehicleshop:client:buyShowroomVehicle', targetplayer.PlayerData.source, vehicle, plate)
-                targetplayer.Functions.RemoveMoney('cash', downPayment, 'vehicle-bought-in-showroom')
-                player.Functions.AddMoney('bank', commission)
-                TriggerEvent('qb-bossmenu:server:addAccountMoney', 'cardealer', vehiclePrice)
-                TriggerClientEvent('QBCore:Notify', targetplayer.PlayerData.source, 'Congratulations on your purchase!', 'success')
-                TriggerClientEvent('QBCore:Notify', src, 'You earned $'..comma_value(commission)..' in commission', 'success')
-            elseif bank > downPayment then
-                exports.oxmysql:insert('INSERT INTO player_vehicles (license, citizenid, vehicle, hash, mods, plate, state, balance, paymentamount, paymentsleft, financetime) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', {
-                    targetplayer.PlayerData.license,
-                    cid,
-                    vehicle,
-                    GetHashKey(vehicle),
-                    '{}',
-                    plate,
-                    0,
-                    balance,
-                    vehPaymentAmount,
-                    paymentAmount,
-                    timer
-                })
-                TriggerClientEvent('qb-vehicleshop:client:buyShowroomVehicle', targetplayer.PlayerData.source, vehicle, plate)
-                targetplayer.Functions.RemoveMoney('bank', downPayment, 'vehicle-bought-in-showroom')
-                player.Functions.AddMoney('bank', commission)
-                TriggerEvent('qb-bossmenu:server:addAccountMoney', 'cardealer', vehiclePrice)
-                TriggerClientEvent('QBCore:Notify', targetplayer.PlayerData.source, 'Congratulations on your purchase!', 'success')
-                TriggerClientEvent('QBCore:Notify', src, 'You earned $'..comma_value(commission)..' in commission', 'success')
-            else
-                TriggerClientEvent('QBCore:Notify', src, 'Not enough money', 'error')
-            end
-        else
-            TriggerClientEvent('QBCore:Notify', src, 'No one nearby', 'error')
-        end
+    end
+    if not targetplayer then return TriggerClientEvent('QBCore:Notify', src, 'No one nearby', 'error') end
+    local downPayment = tonumber(downPayment)
+    local paymentAmount = tonumber(paymentAmount)
+    local cid = targetplayer.PlayerData.citizenid
+    local cash = targetplayer.PlayerData.money['cash']
+    local bank = targetplayer.PlayerData.money['bank']
+    local vehiclePrice = QBCore.Shared.Vehicles[vehicle]['price']
+    local commission = round(vehiclePrice * Config.FinanceCommission)
+    local timer = (Config.PaymentInterval * 60)
+    local minDown = tonumber(round(vehiclePrice / Config.MinimumDown))
+    if downPayment > vehiclePrice then return TriggerClientEvent('QBCore:Notify', src, 'Vehicle is not worth that much', 'error') end
+    if downPayment < minDown then return TriggerClientEvent('QBCore:Notify', src, 'Down payment too small', 'error') end
+    if paymentAmount > Config.MaximumPayments then return TriggerClientEvent('QBCore:Notify', src, 'Exceeded maximum payment amount', 'error') end
+    local plate = GeneratePlate()
+    local balance, vehPaymentAmount = calculateFinance(vehiclePrice, downPayment, paymentAmount)
+    if cash > downPayment then
+        exports.oxmysql:insert('INSERT INTO player_vehicles (license, citizenid, vehicle, hash, mods, plate, state, balance, paymentamount, paymentsleft, financetime) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', {
+            targetplayer.PlayerData.license,
+            cid,
+            vehicle,
+            GetHashKey(vehicle),
+            '{}',
+            plate,
+            0,
+            balance,
+            vehPaymentAmount,
+            paymentAmount,
+            timer
+        })
+        TriggerClientEvent('qb-vehicleshop:client:buyShowroomVehicle', targetplayer.PlayerData.source, vehicle, plate)
+        targetplayer.Functions.RemoveMoney('cash', downPayment, 'vehicle-bought-in-showroom')
+        player.Functions.AddMoney('bank', commission)
+        TriggerEvent('qb-bossmenu:server:addAccountMoney', player.PlayerData.job.name, vehiclePrice)
+        TriggerClientEvent('QBCore:Notify', targetplayer.PlayerData.source, 'Congratulations on your purchase!', 'success')
+        TriggerClientEvent('QBCore:Notify', src, 'You earned $'..comma_value(commission)..' in commission', 'success')
+    elseif bank > downPayment then
+        exports.oxmysql:insert('INSERT INTO player_vehicles (license, citizenid, vehicle, hash, mods, plate, state, balance, paymentamount, paymentsleft, financetime) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', {
+            targetplayer.PlayerData.license,
+            cid,
+            vehicle,
+            GetHashKey(vehicle),
+            '{}',
+            plate,
+            0,
+            balance,
+            vehPaymentAmount,
+            paymentAmount,
+            timer
+        })
+        TriggerClientEvent('qb-vehicleshop:client:buyShowroomVehicle', targetplayer.PlayerData.source, vehicle, plate)
+        targetplayer.Functions.RemoveMoney('bank', downPayment, 'vehicle-bought-in-showroom')
+        player.Functions.AddMoney('bank', commission)
+        TriggerEvent('qb-bossmenu:server:addAccountMoney', player.PlayerData.job.name, vehiclePrice)
+        TriggerClientEvent('QBCore:Notify', targetplayer.PlayerData.source, 'Congratulations on your purchase!', 'success')
+        TriggerClientEvent('QBCore:Notify', src, 'You earned $'..comma_value(commission)..' in commission', 'success')
+    else
+        TriggerClientEvent('QBCore:Notify', src, 'Not enough money', 'error')
     end
 end)
 
