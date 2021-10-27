@@ -9,6 +9,7 @@ Config.MinimumDown = 10 -- minimum percentage allowed down
 Config.MaximumPayments = 24 -- maximum payments allowed
 Config.Shops = {
     ['pdm'] = {
+        ['Job'] = 'none', -- Name of job or none
         ['ShopLabel'] = 'Premium Deluxe Motorsport', -- Blip name
         ['Categories'] = { -- Categories available to browse
             ['sportsclassics'] = 'Sports Classics',
@@ -69,6 +70,7 @@ Config.Shops = {
         },
     },
     ['luxury'] = {
+        ['Job'] = 'cardealer', -- Name of job or none
         ['ShopLabel'] = 'Luxury Vehicle Shop',
         ['Categories'] = {
             ['super'] = 'Super',

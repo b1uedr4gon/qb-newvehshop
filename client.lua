@@ -162,9 +162,7 @@ local function createVehZones(veh) -- This will create an entity zone if config 
         local combo = ComboZone:Create(zones, {name = "vehCombo", debugPoly = false})
         combo:onPlayerInOut(function(isPointInside)
             if isPointInside then
-                if inLuxury and PlayerData.job.name == 'cardealer' then
-                    exports['qb-menu']:showHeader(vehHeaderMenu)
-                elseif inPDM then
+                if PlayerData.job.name == Config.Shops[ClosestShop]['Job'] or Config.Shops[ClosestShop]['Job'] == 'none' then
                     exports['qb-menu']:showHeader(vehHeaderMenu)
                 end
             else
@@ -311,7 +309,7 @@ luxury:onPlayerInOut(function(isPointInside)
             spawnVehicles()
         end
         CreateThread(function()
-            while inLuxury and PlayerData.job.name == 'cardealer' do
+            while inLuxury and PlayerData.job.name == Config.Shops['luxury']['Job'] do
                 setClosestShowroomVehicle()
                 vehicleMenu = {
                     {
