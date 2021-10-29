@@ -493,6 +493,7 @@ RegisterNetEvent('qb-vehicleshop:client:openVehCats', function(data)
         if QBCore.Shared.Vehicles[k]["category"] == data.catName and QBCore.Shared.Vehicles[k]["shop"] == ClosestShop then
             vehicleMenu[#vehicleMenu + 1] = {
                 header = v.name,
+                txt = 'Price: $'..v.price,
                 params = {
                     isServer = true,
                     event = 'qb-vehicleshop:server:swapVehicle',
@@ -578,6 +579,8 @@ RegisterNetEvent('qb-vehicleshop:client:swapVehicle', function(data)
         FreezeEntityPosition(veh, true)
         SetVehicleNumberPlateText(veh, 'BUY ME')
         Config.Shops[data.ClosestShop]["ShowroomVehicles"][data.ClosestVehicle].chosenVehicle = data.toVehicle
+        Wait(1000) -- Must wait 1000 for our closest vehicle function to refresh
+        exports['qb-menu']:openMenu(vehicleMenu)
     end
 end)
 
