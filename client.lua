@@ -170,7 +170,7 @@ local function createVehZones() -- This will create an entity zone if config is 
             end
         end)
     else
-        exports['qb-target']:AddVehicle({
+        exports['qb-target']:AddGlobalVehicle({
             options = {
                 {
                     type = "client",
