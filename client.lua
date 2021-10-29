@@ -185,7 +185,7 @@ local function createVehZones() -- This will create an entity zone if config is 
                     end
                 },
             },
-            distance = 3.0
+            distance = 2.0
         })
     end
 end
