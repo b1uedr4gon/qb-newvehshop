@@ -115,7 +115,7 @@ RegisterNetEvent('qb-vehicleshop:server:customTestDrive', function(data)
     local src = source
     local PlayerPed = GetPlayerPed(src)
     local pCoords = GetEntityCoords(PlayerPed)
-    for k, v in pairs(QBCore.Functions.GetPlayers()) do
+    for k, v in pairs(GetPlayers()) do
         local TargetPed = GetPlayerPed(v)
         local tCoords = GetEntityCoords(TargetPed)
         local dist = #(pCoords - tCoords)
@@ -284,7 +284,7 @@ RegisterNetEvent('qb-vehicleshop:server:sellShowroomVehicle', function(data)
     local PlayerPed = GetPlayerPed(src)
     local pCoords = GetEntityCoords(PlayerPed)
     local player = QBCore.Functions.GetPlayer(src)
-    for k, v in pairs(QBCore.Functions.GetPlayers()) do
+    for k, v in pairs(GetPlayers()) do
         local TargetPed = GetPlayerPed(v)
         local tCoords = GetEntityCoords(TargetPed)
         local dist = #(pCoords - tCoords)
@@ -343,7 +343,7 @@ RegisterNetEvent('qb-vehicleshop:server:sellfinanceVehicle', function(downPaymen
     local PlayerPed = GetPlayerPed(src)
     local pCoords = GetEntityCoords(PlayerPed)
     local player = QBCore.Functions.GetPlayer(src)
-    for k, v in pairs(QBCore.Functions.GetPlayers()) do
+    for k, v in pairs(GetPlayers()) do
         local TargetPed = GetPlayerPed(v)
         local tCoords = GetEntityCoords(TargetPed)
         local dist = #(pCoords - tCoords)
