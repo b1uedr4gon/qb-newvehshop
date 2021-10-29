@@ -146,7 +146,7 @@ local function startTestDriveTimer(testDriveTime)
     end)
 end
 
-local function createVehZones(veh) -- This will create an entity zone if config is true that you can use to target and open the vehicle menu
+local function createVehZones() -- This will create an entity zone if config is true that you can use to target and open the vehicle menu
     if not Config.UsingTarget then
         for i = 1, #Config.Shops[ClosestShop]['ShowroomVehicles'] do
             zones[#zones+1] = BoxZone:Create(
@@ -170,13 +170,19 @@ local function createVehZones(veh) -- This will create an entity zone if config 
             end
         end)
     else
-        exports['qb-target']:AddTargetEntity(veh, {
+        exports['qb-target']:AddVehicle({
             options = {
                 {
                     type = "client",
                     event = "qb-vehicleshop:client:showVehOptions",
                     icon = "fas fa-car",
                     label = "Vehicle Interaction",
+                    canInteract = function(entity)
+                        if (inPDM or inLuxury) and (Config.Shops[ClosestShop]['Job'] == 'none' or PlayerData.job.name == Config.Shops[ClosestShop]['Job']) then
+                            return true
+                        end
+                        return false
+                    end
                 },
             },
             distance = 3.0
@@ -201,7 +207,7 @@ local function spawnVehicles()
         SetEntityHeading(veh, Config.Shops[ClosestShop]["ShowroomVehicles"][i].coords.w)
         FreezeEntityPosition(veh,true)
         SetVehicleNumberPlateText(veh, 'BUY ME')
-        createVehZones(veh)
+        createVehZones()
     end
 end
 
