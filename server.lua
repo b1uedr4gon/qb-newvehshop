@@ -94,8 +94,9 @@ end
 QBCore.Functions.CreateCallback('qb-vehicleshop:server:getVehicles', function(source, cb)
     local src = source
     local player = QBCore.Functions.GetPlayer(src)
+
     if player then
-        local vehicles = exports.oxmysql:executeSync('SELECT * FROM player_vehicles WHERE citizenid = ?', {player.PlayerData.citizenid})
+        local vehicles = exports.oxmysql:executeSync('SELECT * FROM player_vehicles WHERE citizenid = ? AND paymentamount <> 0', {player.PlayerData.citizenid})
         if vehicles[1] then
             cb(vehicles)
         end
@@ -110,6 +111,23 @@ RegisterNetEvent('qb-vehicleshop:server:swapVehicle', function(data)
     TriggerClientEvent('qb-vehicleshop:client:swapVehicle', -1, data)
 end)
 
+function tablePrintOut(table)
+    if type(table) == 'table' then
+       local s = '\n{ '
+       for k,v in pairs(table) do
+          if type(k) ~= 'number' then k = '"'..k..'"' end
+          s = s .. '['..k..'] = ' .. tablePrintOut(v) .. ',\n'
+       end
+       return s .. '}'
+    else
+       return tostring(table)
+    end
+ end
+
+-- example how to trigger it
+
+-- print(tablePrintOut(Player))
+
 -- Send customer for test drive
 RegisterNetEvent('qb-vehicleshop:server:customTestDrive', function(data)
     local src = source
@@ -119,12 +137,14 @@ RegisterNetEvent('qb-vehicleshop:server:customTestDrive', function(data)
         local TargetPed = GetPlayerPed(v)
         local tCoords = GetEntityCoords(TargetPed)
         local dist = #(pCoords - tCoords)
-        if PlayerPed ~= TargetPed and dist < 3.0 then
-            testDrivePlayer = QBCore.Functions.GetPlayer(v)
+        if PlayerPed ~= TargetPed and dist < 5.0 then
+            testDrivePlayer = tonumber(v)
         end
     end
-    if not testDrivePlayer then return TriggerClientEvent('QBCore:Notify', src, 'No one nearby', 'error') end
-    TriggerClientEvent('qb-vehicleshop:client:customTestDrive', testDrivePlayer.PlayerData.source, data)
+    if not testDrivePlayer then 
+        return TriggerClientEvent('QBCore:Notify', src, 'No one nearby', 'error') 
+    end
+    TriggerClientEvent('qb-vehicleshop:client:TestDrive', testDrivePlayer, data)
 end)
 
 -- Make a finance payment
@@ -288,8 +308,8 @@ RegisterNetEvent('qb-vehicleshop:server:sellShowroomVehicle', function(data)
         local TargetPed = GetPlayerPed(v)
         local tCoords = GetEntityCoords(TargetPed)
         local dist = #(pCoords - tCoords)
-        if PlayerPed ~= TargetPed and dist < 1.0 then
-            targetPlayer = QBCore.Functions.GetPlayer(v)
+        if PlayerPed ~= TargetPed and dist < 5.0 then
+            targetPlayer = QBCore.Functions.GetPlayer(tonumber(v))
         end
     end
     if not targetPlayer then return TriggerClientEvent('QBCore:Notify', src, 'No one nearby', 'error') end
@@ -348,7 +368,7 @@ RegisterNetEvent('qb-vehicleshop:server:sellfinanceVehicle', function(downPaymen
         local tCoords = GetEntityCoords(TargetPed)
         local dist = #(pCoords - tCoords)
         if PlayerPed ~= TargetPed and dist < 1.0 then
-            targetplayer = QBCore.Functions.GetPlayer(v)
+            targetplayer = QBCore.Functions.GetPlayer(tonumber(v))
         end
     end
     if not targetplayer then return TriggerClientEvent('QBCore:Notify', src, 'No one nearby', 'error') end

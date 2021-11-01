@@ -98,8 +98,8 @@ local function setClosestShowroomVehicle()
     local pos = GetEntityCoords(PlayerPedId(), true)
     local current = nil
     local dist = nil
-
     for id, veh in pairs(Config.Shops[ClosestShop]["ShowroomVehicles"]) do
+        
         local dist2 = #(pos - vector3(Config.Shops[ClosestShop]["ShowroomVehicles"][id].coords.x, Config.Shops[ClosestShop]["ShowroomVehicles"][id].coords.y, Config.Shops[ClosestShop]["ShowroomVehicles"][id].coords.z))
         if current ~= nil then
             if dist2 < dist then
@@ -291,18 +291,16 @@ pdm:onPlayerInOut(function(isPointInside)
 end)
 
 local luxury = PolyZone:Create({
-    vector2(-81.724754333496, 72.436462402344),
-    vector2(-60.159938812256, 60.576206207275),
-    vector2(-55.763122558594, 61.749210357666),
-    vector2(-52.965869903564, 69.869110107422),
-    vector2(-50.352680206299, 75.886123657227),
-    vector2(-61.261016845703, 81.564918518066),
-    vector2(-63.812171936035, 75.633102416992),
-    vector2(-76.546226501465, 81.189826965332)
+    vector2(-818.09185791016, -197.55799865723),
+    vector2(-788.228515625, -249.61888122559),
+    vector2(-760.46484375, -237.28861999512),
+    vector2(-784.32635498047, -200.41342163086),
+    vector2(-790.77685546875, -204.13609313965),
+    vector2(-800.11260986328, -188.20774841309)
   }, {
     name="luxury",
-    minZ = 69.0,
-    maxZ = 76.0
+    minZ = 37.032440185547,
+    maxZ = 37.509967803955
 })
 
 luxury:onPlayerInOut(function(isPointInside)
@@ -387,7 +385,7 @@ RegisterNetEvent('qb-vehicleshop:client:TestDrive', function()
         local prevCoords = GetEntityCoords(PlayerPedId())
         QBCore.Functions.SpawnVehicle(Config.Shops[ClosestShop]["ShowroomVehicles"][ClosestVehicle].chosenVehicle, function(veh)
             TaskWarpPedIntoVehicle(PlayerPedId(), veh, -1)
-            exports['LegacyFuel']:SetFuel(veh, 100)
+            exports['lj-fuel']:SetFuel(veh, 100)
             SetVehicleNumberPlateText(veh, 'TESTDRIVE')
             SetEntityAsMissionEntity(veh, true, true)
             SetEntityHeading(veh, Config.Shops[ClosestShop]["VehicleSpawn"].w)
@@ -413,6 +411,7 @@ RegisterNetEvent('qb-vehicleshop:client:TestDrive', function()
 end)
 
 RegisterNetEvent('qb-vehicleshop:client:customTestDrive', function(data)
+    print("test")
     if not inTestDrive then
         inTestDrive = true
         local vehicle = data.testVehicle
@@ -587,7 +586,7 @@ end)
 RegisterNetEvent('qb-vehicleshop:client:buyShowroomVehicle', function(vehicle, plate)
     QBCore.Functions.SpawnVehicle(vehicle, function(veh)
         TaskWarpPedIntoVehicle(PlayerPedId(), veh, -1)
-        exports['LegacyFuel']:SetFuel(veh, 100)
+        exports['lj-fuel']:SetFuel(veh, 100)
         SetVehicleNumberPlateText(veh, plate)
         SetEntityHeading(veh, Config.Shops[ClosestShop]["VehicleSpawn"].w)
         SetEntityAsMissionEntity(veh, true, true)

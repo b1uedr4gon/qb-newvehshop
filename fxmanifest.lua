@@ -4,7 +4,9 @@ game 'gta5'
 description 'qb-testvehshop'
 version '0.0.1'
 
-shared_script 'config.lua'
+shared_script {
+    'config.lua',
+}
 
 client_scripts {
     '@PolyZone/client.lua',

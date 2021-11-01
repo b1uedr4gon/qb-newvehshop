@@ -2,7 +2,7 @@ Config = {}
 Config.UsingTarget = false -- If you are using qb-target (uses entity zones to target vehicles)
 Config.Commission = 0.10 -- Percent that goes to sales person from a full car sale 10%
 Config.FinanceCommission = 0.05 -- Percent that goes to sales person from a finance sale 5%
-Config.FinanceZone = vector3(-29.53, -1103.67, 26.42) -- Where the finance menu is located
+Config.FinanceZone = vector3(-795.57, -220.09, 37.08) -- Where the finance menu is located
 Config.PaymentWarning = 10 -- time in minutes that player has to make payment before repo
 Config.PaymentInterval = 24 -- time in hours between payment being due
 Config.MinimumDown = 10 -- minimum percentage allowed down
@@ -73,33 +73,35 @@ Config.Shops = {
         ['Job'] = 'cardealer', -- Name of job or none
         ['ShopLabel'] = 'Luxury Vehicle Shop',
         ['Categories'] = {
-            ['super'] = 'Super',
-            ['sports'] = 'Sports'
+            ['30to80'] = 'Cars 30-80k',
+            ['81to150'] = 'Cars 81-150k',
+            ['151to250'] = 'Cars 151-250k',
+            ['250plus'] = 'Cars 250k +'
         },
-        ['TestDriveTimeLimit'] = 0.5,
-        ['Location'] = vector3(-63.59, 68.25, 73.06),
-        ['ReturnLocation'] = vector3(-65.05, 81.23, 71.16),
-        ['VehicleSpawn'] = vector4(-71.13, 84.04, 71.09, 65.23),
+        ['TestDriveTimeLimit'] = 5,
+        ['Location'] = vector3(-795.57, -220.09, 37.08),
+        ['ReturnLocation'] = vector3(-763.98, -242.11, 37.23),
+        ['VehicleSpawn'] = vector4(-769.34, -243.39, 37.23, 203.62),
         ['ShowroomVehicles'] = {
             [1] = {
-                coords = vector4(-75.96, 74.78, 70.90, 221.69),
-                defaultVehicle = 'italirsx',
-                chosenVehicle = 'italirsx',
+                coords = vector4(-783.17, -223.44, 37.32, 122.73),
+                defaultVehicle = 'rs6',
+                chosenVehicle = 'rs6',
             },
             [2] = {
-                coords = vector4(-66.52, 74.33, 70.65, 188.03),
-                defaultVehicle = 'italigtb',
-                chosenVehicle = 'italigtb',
+                coords = vector4(-791.62, -235.39, 37.08, 68.52),
+                defaultVehicle = 'rs3',
+                chosenVehicle = 'rs3',
             },
             [3] = {
-                coords = vector4(-71.83, 68.60, 70.75, 276.57),
-                defaultVehicle = 'nero',
-                chosenVehicle = 'nero',
+                coords = vector4(-788.93, -240.18, 37.08, 73.27),
+                defaultVehicle = 'lp700r',
+                chosenVehicle = 'lp700r',
             },
             [4] = {
-                coords = vector4(-59.95, 68.61, 70.85, 181.44),
-                defaultVehicle = 'comet2',
-                chosenVehicle = 'comet2',
+                coords = vector4(-786.59, -245.26, 37.08, 64.31),
+                defaultVehicle = 'm5f90',
+                chosenVehicle = 'm6f90',
             }
         }
     } -- Add your next table under this comma
